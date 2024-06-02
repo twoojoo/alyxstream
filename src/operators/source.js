@@ -100,3 +100,16 @@ export const fromEtcd = {
     return task
   }
 }
+
+export const fromNatsKV = {
+  fromNatsKV (storage, key) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async () => {
+      await storage.watch(key, async (data) => {
+        await task._nextAtIndex(index)(Message(data))
+      })
+    })
+    return task
+  }
+}

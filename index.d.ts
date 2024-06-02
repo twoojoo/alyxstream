@@ -206,6 +206,8 @@ export declare interface TaskBase<I, T, L, Ls extends boolean, Sk extends Storag
  
     // fromPulsarWs: never, // not implemented
 
+    fromNatsKV: <R = any>(storage: Storage<StorageKind.NatsKV>, key: string | number) => Tsk<I, NatsKvEntry<R>, L, Ls, Sk, Ms>
+
     fromEtcd: (storage: Storage<StorageKind.Etcd>, key: string | number, watch?: boolean) => Tsk<I, Etcd.IKeyValue, L, Ls, Sk, Ms>,
 
     /** Consumes messages from a NATS Jetstream stream */
@@ -327,11 +329,17 @@ export enum StorageKind {
     Cassandra = "Cassandra",
     Etcd = "Etcd",
     Opensearch = "Opensearch",
-    Postgres = "Postgres"
+    Postgres = "Postgres",
+    NatsKV = "NatsKV"
 }
 
 // from IOptions.node
 export type OpensearchNode = string | string[] | Opensearch.NodeOptions | Opensearch.NodeOptions[]
+
+export type NatsKvConfig = {
+    kv: Nats.KV,
+    codec: Nats.KvCodec<any>
+}
 
 /** Conditional generic type for different storage configuration objects. */
 export type StorageConfig<K extends StorageKind> = K extends StorageKind.Memory
@@ -346,6 +354,8 @@ export type StorageConfig<K extends StorageKind> = K extends StorageKind.Memory
     ? OpensearchNode
     : K extends StorageKind.Postgres
     ? Postgres.ClientConfig
+    : K extends StorageKind.NatsKV
+    ? NatsKvConfig
     : never
 
 export declare interface Storage<K extends StorageKind> {
@@ -478,6 +488,10 @@ export declare interface NatsStreamMsg<T> {
         msg: Nats.JsMsg,
         didAck: boolean,
     }
+}
+
+export declare type NatsKvEntry<T> = Nats.KvEntry & {
+    decoded: T
 }
 
 export declare function NatsClient(server: Nats.ConnectionOptions): Promise<Nats.NatsConnection>

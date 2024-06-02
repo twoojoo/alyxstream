@@ -6,6 +6,7 @@ import * as Cassandra from './cassandra.js'
 import * as Etcd from './etcd.js'
 import * as Postgres from './postgres.js'
 import * as Opensearch from './opensearch.js'
+import * as NatsKV from './natskv.js'
 
 export function Make (kind, config = null, id = null) {
   switch (kind) {
@@ -42,6 +43,12 @@ export function Make (kind, config = null, id = null) {
       }
       return Etcd.Make(config, id)
 
+    case 'NatsKV':
+      if (id === null || typeof id !== 'string') {
+        throw new Error('Id cannot be null and have to be a String')
+      }
+      return NatsKV.Make(config, id)
+
     default:
       throw new Error('Unknown storage kind')
   }
@@ -53,5 +60,6 @@ export const Kind = {
   Cassandra: 'Cassandra',
   Etcd: 'Etcd',
   Postgres: 'Postgres',
-  Opensearch: 'Opensearch'
+  Opensearch: 'Opensearch',
+  NatsKV: 'NatsKV'
 }
