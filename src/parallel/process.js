@@ -5,7 +5,7 @@ import Message from '../message/message.js'
 import Log from '../logger/default.js'
 
 export const parallel = {
-  parallel (numberOfProcess, produceFunction = null) {
+  parallel(numberOfProcess, produceFunction = null) {
     const task = this
     const index = task._nextIndex()
 
@@ -26,6 +26,118 @@ export const parallel = {
       }
       if (!cluster.isPrimary) {
         await task._nextAtIndex(index)(Message(null))
+      }
+    })
+    return task
+  },
+
+  parallelize(cb, maxChunkSize = Infinity, flushSingleChunks = false) {
+    const task = this
+    const index = task._nextIndex()
+
+    if (maxChunkSize < 1) {
+      throw Error("maxSize must be > 1 in parallelize operator")
+    }
+
+    task._setNext(async (s) => {
+      if (!Array.isArray(s.payload)) {
+        throw Error("parallelize operator requires an array")
+      }
+
+      const chunks = []
+      for (let i = 0; i < s.payload.length; i += maxChunkSize) {
+        const chunk = s.payload.slice(i, i + maxChunkSize);
+        chunks.push(chunk);
+      }
+
+      let results = []
+      for (let i = 0; i < chunks.length; i++) {
+        const jobs = []
+
+        for (let j = 0; j < chunks[i].length; j++) {
+          jobs[j] = new Promise(async (resolve, reject) => {
+            try {
+              const r = await cb(chunks[i][j])
+              resolve(r)
+            } catch (e) {
+              reject(e)
+            }
+          })
+        }
+
+        const result = await Promise.all(jobs)
+
+        if (flushSingleChunks) {
+          await task._nextAtIndex(index)(Message(result, s.metadata, s.globalState))
+        } else {
+          results[i] = result
+        }
+      }
+
+      if (!flushSingleChunks) {
+        results = results.flat()
+        await task._nextAtIndex(index)(Message(results, s.metadata, s.globalState))
+      }
+    })
+    return task
+  },
+
+  parallelizeCatch(cb, onError, maxChunkSize = Infinity, flushSingleChunks = false) {
+    const task = this
+    const index = task._nextIndex()
+
+    if (maxChunkSize < 1) {
+      throw Error("maxSize must be > 1 in parallelize operator")
+    }
+
+    task._setNext(async (s) => {
+      if (!Array.isArray(s.payload)) {
+        throw Error("parallelize operator requires an array")
+      }
+
+      const chunks = []
+      for (let i = 0; i < s.payload.length; i += maxChunkSize) {
+        const chunk = s.payload.slice(i, i + maxChunkSize);
+        chunks.push(chunk);
+      }
+
+      let results = []
+      for (let i = 0; i < chunks.length; i++) {
+        const jobs = []
+
+        for (let j = 0; j < chunks[i].length; j++) {
+          jobs[j] = new Promise(async (resolve, reject) => {
+            try {
+              const r = await cb(chunks[i][j])
+              resolve(r)
+            } catch (e) {
+              reject(e)
+            }
+          })
+        }
+
+        let r = await Promise.allSettled(jobs)
+
+        const result = []
+        for (let j = 0; j < r.length; j++) {
+          if (r[j].status == "rejected") {
+            const value = await onError(r[j].reason, chunks[i][j])
+            result.push(value)
+          } else {
+            result.push(r[j].value)
+          }
+        }
+
+        if (flushSingleChunks) {
+          await task._nextAtIndex(index)(Message(result, s.metadata, s.globalState))
+        } else {
+          results[i] = result
+        }
+      }
+
+      if (!flushSingleChunks) {
+        results = results.flat()
+        await task._nextAtIndex(index)(Message(results, s.metadata, s.globalState))
       }
     })
     return task

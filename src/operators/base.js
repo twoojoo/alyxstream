@@ -110,6 +110,30 @@ export const print = {
   }
 }
 
+export const tap = {
+  tap (cb) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async (element) => {
+      await cb(element.payload)
+      await task._nextAtIndex(index)(element)
+    })
+    return task
+  }
+}
+
+export const tapRaw = {
+  tapRaw (cb) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async (element) => {
+      await cb(element)
+      await task._nextAtIndex(index)(element)
+    })
+    return task
+  }
+}
+
 export const branch = {
   branch (arrayOfFunctions) {
     const task = this

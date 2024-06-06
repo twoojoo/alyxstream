@@ -55,6 +55,10 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
     }
     : never
 
+    tap: (cb: (x: C) => any) => T<I, C, L, Ls, Sk, Ms>
+
+    tapRaw: (cb: (x: TaskMessage<C>) => any) => T<I, C, L, Ls, Sk, Ms>
+
     /** Sets the message key to *"default"* */
     withDefaultKey: () => T<I, C, L, Ls, Sk, Ms>
 
@@ -350,6 +354,18 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
      * @requires *string* */
     tokenize: C extends string 
     ? (separator?: string) => T<I, string[], L, Ls, Sk, Ms>
+    : never
+
+    parallelize: C extends (infer E)[]
+    ? <R>(cb: (x: E) => R, maxChunkSize?: number, flushSingleChunks?: boolean) => R extends Promise<infer U> 
+        ? T<I, U[], L, Ls, Sk, Ms>
+        : T<I, R[], L, Ls, Sk, Ms>
+    : never
+
+    parallelizeCatch: C extends (infer E)[]
+    ? <R>(cb: (x: E) => R, onError: (e: any, x: E) => R extends Promise<infer U> ? U : R, maxChunkSize?: number, flushSingleChunks?: boolean) => R extends Promise<infer U> 
+        ? T<I, U[], L, Ls, Sk, Ms>
+        : T<I, R[], L, Ls, Sk, Ms>
     : never
 
     // prevents type errors for task extensions

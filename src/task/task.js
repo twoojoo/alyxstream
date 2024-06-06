@@ -75,6 +75,8 @@ export default function (id) {
     BaseOperators.tokenize,
     BaseOperators.branch,
     BaseOperators.readline,
+    BaseOperators.tap,
+    BaseOperators.tapRaw,
 
     ArrayOperators.map,
     ArrayOperators.groupBy,
