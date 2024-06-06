@@ -368,6 +368,18 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
         : T<I, R[], L, Ls, Sk, Ms>
     : never
 
+    race: C extends (infer E)[]
+    ? <R>(cb: (x: E) => R) => R extends Promise<infer U> 
+        ? T<I, U, L, Ls, Sk, Ms>
+        : T<I, R, L, Ls, Sk, Ms>
+    : never
+
+    raceCatch: C extends (infer E)[]
+    ? <R>(cb: (x: E) => R, onError: (e: any, x: C) => R extends Promise<infer U> ? U : R) => R extends Promise<infer U> 
+        ? T<I, U, L, Ls, Sk, Ms>
+        : T<I, R, L, Ls, Sk, Ms>
+    : never
+
     // prevents type errors for task extensions
     [x: string]: any
 }

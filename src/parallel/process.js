@@ -141,5 +141,68 @@ export const parallel = {
       }
     })
     return task
+  },
+
+   race(cb) {
+    const task = this
+    const index = task._nextIndex()
+
+    task._setNext(async (s) => {
+      if (!Array.isArray(s.payload)) {
+        throw Error("parallelize operator requires an array")
+      }
+
+      const jobs = []
+      for (let j = 0; j < s.payload.length; j++) {
+        jobs[j] = new Promise(async (resolve, reject) => {
+          try {
+            const r = await cb(s.payload[j])
+            resolve(r)
+          } catch (e) {
+            reject(e)
+          }
+        })
+      }
+
+      try {
+        const value = await Promise.race(jobs)
+        await task._nextAtIndex(index)(Message(value, s.metadata, s.globalState))
+      } catch (e) {
+        throw e
+      }
+    })
+    return task
+  },
+
+  raceCatch(cb, onError) {
+    const task = this
+    const index = task._nextIndex()
+
+    task._setNext(async (s) => {
+      if (!Array.isArray(s.payload)) {
+        throw Error("parallelize operator requires an array")
+      }
+
+      const jobs = []
+      for (let j = 0; j < s.payload.length; j++) {
+        jobs[j] = new Promise(async (resolve, reject) => {
+          try {
+            const r = await cb(s.payload[j])
+            resolve(r)
+          } catch (e) {
+            reject(e)
+          }
+        })
+      }
+
+      try {
+        const value = await Promise.race(jobs)
+        await task._nextAtIndex(index)(Message(value, s.metadata, s.globalState))
+      } catch (e) {
+        const value =await onError(e, s.payload)
+        await task._nextAtIndex(index)(Message(value, s.metadata, s.globalState))
+      }
+    })
+    return task
   }
 }

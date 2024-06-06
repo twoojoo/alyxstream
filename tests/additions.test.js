@@ -102,3 +102,32 @@ test('parallelize.catch.chunks.flush', async () => {
 		.tap(x => expect(x % 2).toBe(0))
 		.close()
 })
+
+test('race', async () => {
+	const input = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+	await Task()
+		.fromObject(input)
+		.race(async x => {
+			await new Promise(r => setTimeout(r), Math.random() * 100)
+			return x
+		})
+		.tap(x => {
+			expect(x).toBeLessThanOrEqual(9)
+			expect(x).toBeGreaterThanOrEqual(0)
+		})
+		.close()
+})
+
+test('race.catch', async () => {
+	const input = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+	await Task()
+		.fromObject(input)
+		.raceCatch(async x => {
+			await new Promise((_, r) => setTimeout(r), Math.random() * 100)
+			return x
+		}, (e, arr) => arr[5])
+		.tap(x => expect(x).toBe(5))
+		.close()
+})
