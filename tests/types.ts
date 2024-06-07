@@ -56,7 +56,7 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 		topics: [{
 			topic: "alyxstream-test-topic",
 			parseWith: x => JSON.parse(x) as { x: number }
-		},{
+		}, {
 			topic: "alyxstream-test-topic",
 			parseWith: x => JSON.parse(x) as { x: number }
 		}]
@@ -259,5 +259,35 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 		)
 		.print("collect - result")
 		.flushStorage(_ => ["default"])
+		.close()
+
+	await AS.Task()
+		.fromObject([1, 2, 3, 4, 5])
+		.parallelizeCatch(
+			(x, i, arr) => x,
+			(e, x, i, arr) => {
+				if (isNaN(x)) throw Error("x should be a number")
+				if (isNaN(i)) throw Error("index should be a number")
+				if (isNaN(arr.length)) throw Error("arr should be an array")
+				if (!e.message) throw Error("e should be an error")
+				return x
+			}, 
+			Infinity,
+			true,
+			false,
+		)
+		.close()
+
+	await AS.Task()
+		.fromObject([1, 2, 3, 4, 5])
+		.raceCatch(
+			(x, i, arr) => x,
+			(e, arr) => {
+				if (isNaN(arr.length)) throw Error("arr should be an array")
+				if (!e.message) throw Error("e should be an error")
+				return arr[0]
+			},
+			false,
+		)
 		.close()
 })()

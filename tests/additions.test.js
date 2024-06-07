@@ -19,7 +19,7 @@ test('parallelize', async () => {
 		.close()
 })
 
-test('parallelize.with.chunks', async () => {
+test('parallelize.chunks', async () => {
 	const input = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 	await Task()
@@ -37,7 +37,7 @@ test('parallelize.with.chunks', async () => {
 		.close()
 })
 
-test('parallelize.with.chunks.flush', async () => {
+test('parallelize.chunks.flush', async () => {
 	const input = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 	await Task()
@@ -63,9 +63,8 @@ test('parallelize.catch', async () => {
 		.parallelizeCatch(async x => {
 			if (x % 2 == 1) throw Error("odd")
 			return x
-		}, (e, x) => x - 1)
+		}, (e, x) => x - 1, Infinity, false, true)
 		.tap(x => expect(x.length).toBe(input.length))
-		.print()
 		.each()
 		.tap(x => expect(x % 2).toBe(0))
 		.close()
@@ -79,7 +78,7 @@ test('parallelize.catch.chunks', async () => {
 		.parallelizeCatch(async x => {
 			if (x % 2 == 1) throw Error("odd")
 			return x
-		}, (e, x) => x - 1, 5)
+		}, (e, x) => x - 1, 5, false, true)
 		.tap(x => expect(x.length).toBe(input.length))
 		.print()
 		.each()
@@ -95,7 +94,7 @@ test('parallelize.catch.chunks.flush', async () => {
 		.parallelizeCatch(async x => {
 			if (x % 2 == 1) throw Error("odd")
 			return x
-		}, (e, x) => x - 1, 5, true)
+		}, (e, x) => x - 1, 5, true, true)
 		.tap(x => expect(x.length).toBe(5))
 		.print()
 		.each()

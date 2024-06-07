@@ -57,7 +57,7 @@ export const parallel = {
         for (let j = 0; j < chunks[i].length; j++) {
           jobs[j] = new Promise(async (resolve, reject) => {
             try {
-              const r = await cb(chunks[i][j])
+              const r = await cb(chunks[i][j], j, chunks[i])
               resolve(r)
             } catch (e) {
               reject(e)
@@ -82,7 +82,7 @@ export const parallel = {
     return task
   },
 
-  parallelizeCatch(cb, onError, maxChunkSize = Infinity, flushSingleChunks = false) {
+  parallelizeCatch(cb, onError, maxChunkSize = Infinity, flushSingleChunks = false, keepErrors = false) {
     const task = this
     const index = task._nextIndex()
 
@@ -121,8 +121,8 @@ export const parallel = {
         const result = []
         for (let j = 0; j < r.length; j++) {
           if (r[j].status == "rejected") {
-            const value = await onError(r[j].reason, chunks[i][j])
-            result.push(value)
+            const value = await onError(r[j].reason, chunks[i][j], j, chunks[i])
+            if (keepErrors) result.push(value)
           } else {
             result.push(r[j].value)
           }
@@ -143,7 +143,7 @@ export const parallel = {
     return task
   },
 
-   race(cb) {
+  race(cb) {
     const task = this
     const index = task._nextIndex()
 
@@ -174,7 +174,7 @@ export const parallel = {
     return task
   },
 
-  raceCatch(cb, onError) {
+  raceCatch(cb, onError, keepErrors = false) {
     const task = this
     const index = task._nextIndex()
 
@@ -199,8 +199,10 @@ export const parallel = {
         const value = await Promise.race(jobs)
         await task._nextAtIndex(index)(Message(value, s.metadata, s.globalState))
       } catch (e) {
-        const value =await onError(e, s.payload)
-        await task._nextAtIndex(index)(Message(value, s.metadata, s.globalState))
+        const value = await onError(e, s.payload)
+        if (keepErrors) {
+          await task._nextAtIndex(index)(Message(value, s.metadata, s.globalState))
+        }
       }
     })
     return task

@@ -55,20 +55,24 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
     }
     : never
 
-    tap: (cb: (x: C) => any) => T<I, C, L, Ls, Sk, Ms>
+    /** Execute a callback that takes the message as parameter and continues the task execution with the original message. 
+     * @param callback return value is ignored (can be async) */
+    tap: (callback: (x: C) => any) => T<I, C, L, Ls, Sk, Ms>
 
-    tapRaw: (cb: (x: TaskMessage<C>) => any) => T<I, C, L, Ls, Sk, Ms>
+    /** Execute a callback that takes the raw message as parameter and continues the task execution with the original message. 
+     * @param callback return value is ignored (can be async) */
+    tapRaw: (callback: (x: TaskMessage<C>) => any) => T<I, C, L, Ls, Sk, Ms>
 
     /** Sets the message key to *"default"* */
     withDefaultKey: () => T<I, C, L, Ls, Sk, Ms>
 
     /** Sets the event time from the message payload. */
-    withEventTime: (cb: (x: C) => number) => T<I, C, L, Ls, Sk, Ms>
+    withEventTime: (callback: (x: C) => number) => T<I, C, L, Ls, Sk, Ms>
 
     /** Sets the message key from the message payload. */
-    keyBy: (cb: (x: C) => string | number) => T<I, C, L, Ls, Sk, Ms>
+    keyBy: (callback: (x: C) => string | number) => T<I, C, L, Ls, Sk, Ms>
 
-    filter: (cb: (x: C) => boolean) => T<I, C, L, Ls, Sk, Ms>
+    filter: (callback: (x: C) => boolean) => T<I, C, L, Ls, Sk, Ms>
 
     print: (str?: any) => T<I, C, L, Ls, Sk, Ms>
 
@@ -77,12 +81,14 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
 
     readline: () => T<I, string, L, Ls, Sk, Ms>
 
-    /** Execute a function on the message payload. Can be an async function. */
+    /** Execute a function on the message payload, continuing the task with its return value as message.
+     * @param callbcak can be async */
     fn: <R>(callback: (x: C) => R) => R extends Promise<infer U> 
         ? T<I, U, L, Ls, Sk, Ms> 
         : T<I, R, L, Ls, Sk, Ms>
     
-    /** Execute a function on the raw task message. Can be an async fucntion. */
+    /** Execute a function on the raw task message, continuing the task with its return value as message.
+     * @param callbcak can be async */
     fnRaw: <R>(callback: (x: TaskMessage<C>) => R) => R extends Promise<infer U> 
         ? T<I, U, L, Ls, Sk, Ms> 
         : T<I, R, L, Ls, Sk, Ms>
@@ -307,7 +313,8 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
     : never
     
     /** Filters array elements.
-     *  @requires *array* */
+     *  @requires ``array``
+     *  @param func filtering callback */
     filterArray: C extends (infer U)[] 
     ? (func: (x: U) => boolean) => T<I, C, L, Ls, Sk, Ms> 
     : never
@@ -344,38 +351,64 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
     ? (keysFunc: (x: TaskMessage<C>) => (string | number)[]) => T<I, unknown[], L, Ls, Sk, Ms> 
     : never
     
-    /** Flattens an array. 
+    /** Flattens an array message. 
      * @requires *array* */ 
     flat: C extends any[] 
     ? () => T<I, NestedElem<C>[], L, Ls, Sk, Ms> 
     : never
 
-    /** Splits a string (default separator: '\s'). 
-     * @requires *string* */
+    /** Splits a string message. 
+     * @requires ``string``
+     * @param separator default: "\s" */
     tokenize: C extends string 
     ? (separator?: string) => T<I, string[], L, Ls, Sk, Ms>
     : never
 
-    parallelize: C extends (infer E)[]
-    ? <R>(cb: (x: E) => R, maxChunkSize?: number, flushSingleChunks?: boolean) => R extends Promise<infer U> 
+    /** Turns an array into parlallel executions of the given callback
+     * @requires ```array```
+     * @param callback function to be executed in parallel (can be async). <br/>*when chunking, second and third arguments of the callback *(``i``, ``arr``)* refer to the chunk, not to the original array*
+     * @param maxChunkSize maximum number of parallel jobs (defaults: *Infinity*, no chunking) 
+     * @param flushSingleChunks continue the task separatelly for each chunk (default: *false*) */
+    parallelize: C extends (infer D)[]
+    ? <R>(callback: (x: D, i: number, arr: D[]) => R, maxChunkSize?: number, flushSingleChunks?: boolean) => R extends Promise<infer U> 
         ? T<I, U[], L, Ls, Sk, Ms>
         : T<I, R[], L, Ls, Sk, Ms>
     : never
 
-    parallelizeCatch: C extends (infer E)[]
-    ? <R>(cb: (x: E) => R, onError: (e: any, x: E) => R extends Promise<infer U> ? U : R, maxChunkSize?: number, flushSingleChunks?: boolean) => R extends Promise<infer U> 
+    /** Turns an array into parlallel executions of the given callback
+    * @requires ```array```
+    * @param callback function to be executed in parallel (can be async). <br/>*when chunking, second and third arguments of the callback *(``i``, ``arr``)* refer to the chunk, not to the original array*
+    * @param maxChunkSize maximum number of parallel jobs (defaults: ```Infinity```, no chunking) 
+    * @param flushSingleChunks continue the task separatelly for each chunk (default: ```false```) 
+    * @param onError calback to catch parallel jobs errors
+    * @param keepErrors when set to true, ``onError`` return values are considered valid results and must be of the same type of ``callback`` return types */
+    parallelizeCatch: C extends (infer D)[]
+    ? <R, E = Error>(
+        callback: (x: D, i: number, arr: D[]) => R,  
+        onError: (e: E, x: D, i: number, arr: D[]) => R extends Promise<infer U> ? U : R, 
+        maxChunkSize?: number, 
+        flushSingleChunks?: boolean,
+        keepErrors?: Boolean,
+    ) => R extends Promise<infer U> 
         ? T<I, U[], L, Ls, Sk, Ms>
         : T<I, R[], L, Ls, Sk, Ms>
     : never
 
-    race: C extends (infer E)[]
-    ? <R>(cb: (x: E) => R) => R extends Promise<infer U> 
+    /** Turns an array into parlallel executions of the given callback
+    * @requires ``array``
+    * @param callback function to be executed in race mode (can be async) */
+    race: C extends (infer D)[]
+    ? <R>(callback: (x: D, i: number, arr: D[]) => R) => R extends Promise<infer U> 
         ? T<I, U, L, Ls, Sk, Ms>
         : T<I, R, L, Ls, Sk, Ms>
     : never
 
-    raceCatch: C extends (infer E)[]
-    ? <R>(cb: (x: E) => R, onError: (e: any, x: C) => R extends Promise<infer U> ? U : R) => R extends Promise<infer U> 
+    /** Turns an array into a race execution of the given callback.
+    * @requires ``array``
+    * @param callback function to be executed in race mode that takes array elements as arguments (can be async)
+    * @param onError calback to catch race errors that takes the error and the original array as arguments */
+    raceCatch: C extends (infer D)[]
+    ? <R, E = Error>(callback: (x: D, i: number, arr: D[]) => R, onError: (e: E, arr: C) => R extends Promise<infer U> ? U : R, keepErrors?: Boolean) => R extends Promise<infer U> 
         ? T<I, U, L, Ls, Sk, Ms>
         : T<I, R, L, Ls, Sk, Ms>
     : never
