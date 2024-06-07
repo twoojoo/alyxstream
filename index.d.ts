@@ -367,7 +367,7 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
     /** Turns an array into parlallel executions of the given callback
      * @requires ```array```
      * @param callback function to be executed in parallel (can be async). <br/>*when chunking, second and third arguments of the callback *(``i``, ``arr``)* refer to the chunk, not to the original array*
-     * @param maxChunkSize maximum number of parallel jobs (defaults: *Infinity*, no chunking) 
+     * @param maxChunkSize maximum number of parallel jobs (defaults: *Infinity*, no chunking). Values <= 0 are considered *Infinity* 
      * @param flushSingleChunks continue the task separatelly for each chunk (default: *false*) */
     parallelize: C extends (infer D)[]
     ? <R>(callback: (x: D, i: number, arr: D[]) => R, maxChunkSize?: number, flushSingleChunks?: boolean) => R extends Promise<infer U> 
@@ -378,7 +378,7 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
     /** Turns an array into parlallel executions of the given callback
     * @requires ```array```
     * @param callback function to be executed in parallel (can be async). <br/>*when chunking, second and third arguments of the callback *(``i``, ``arr``)* refer to the chunk, not to the original array*
-    * @param maxChunkSize maximum number of parallel jobs (defaults: ```Infinity```, no chunking) 
+    * @param maxChunkSize maximum number of parallel jobs. (defaults: ```Infinity```, no chunking). Values <= 0 are considered *Infinity*
     * @param flushSingleChunks continue the task separatelly for each chunk (default: ```false```) 
     * @param onError calback to catch parallel jobs errors
     * @param keepErrors when set to true, ``onError`` return values are considered valid results and must be of the same type of ``callback`` return types */

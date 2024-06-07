@@ -86,8 +86,8 @@ export const parallel = {
     const task = this
     const index = task._nextIndex()
 
-    if (maxChunkSize < 1) {
-      throw Error("maxSize must be > 1 in parallelize operator")
+    if (maxChunkSize <= 0) {
+      maxChunkSize = Infinity
     }
 
     task._setNext(async (s) => {
