@@ -128,5 +128,7 @@ test('race.catch', async () => {
 			return x
 		}, (e, arr) => arr[5])
 		.tap(x => expect(x).toBe(5))
+		.fn(x => crypto.createHash("sha256").update(x).digest('hex'))
+		.tap(x => expect(x.length).toBe(64))
 		.close()
 })
