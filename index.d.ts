@@ -241,6 +241,9 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
  
     ackPulsar: (sink: PlsSource) => T<I, C, L, Ls, Sk, Ms>,
 
+    /** Watch changes over a Nats KV key. */
+    fromNatsKV: <R = any>(storage: Storage<StorageKind.NatsKV>, key: string | number) => Tsk<I, NatsKvEntry<R>, L, Ls, Sk, Ms>
+
     /** Watch changes over an Etcd key. */
     fromEtcd: (storage: Storage<StorageKind.Etcd>, key: string | number, watch?: boolean) => T<I, Etcd.IKeyValue, L, Ls, Sk, Ms>,
 
@@ -434,7 +437,8 @@ export declare enum StorageKind {
     Cassandra = "Cassandra",
     Etcd = "Etcd",
     Opensearch = "Opensearch",
-    Postgres = "Postgres"
+    Postgres = "Postgres",
+    NatsKV = "NatsKV"
 }
 
 // from IOptions.node
@@ -443,6 +447,11 @@ export declare type OpensearchNode =
     string[] | 
     Opensearch.NodeOptions | 
     Opensearch.NodeOptions[]
+
+export type NatsKvConfig = {
+    kv: Nats.KV,
+    codec: Nats.KvCodec<any>
+}
 
 /** Conditional generic type for different storage configuration objects. */
 export declare type StorageConfig<K extends StorageKind> = K extends StorageKind.Memory
@@ -457,6 +466,8 @@ export declare type StorageConfig<K extends StorageKind> = K extends StorageKind
     ? OpensearchNode
     : K extends StorageKind.Postgres
     ? Postgres.ClientConfig
+    : K extends StorageKind.NatsKV
+    ? NatsKvConfig
     : never
 
 /** Storage sytem to be used in Alyxstream tasks. */
@@ -625,6 +636,10 @@ export declare interface NatsStreamMsg<T> {
         msg: Nats.JsMsg,
         didAck: boolean,
     }
+}
+
+export declare type NatsKvEntry<T> = Nats.KvEntry & {
+    decoded: T
 }
 
 /** Initialize a Nats connection */

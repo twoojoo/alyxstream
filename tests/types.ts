@@ -1,4 +1,4 @@
-import { AckPolicy, DeliverPolicy, ReplayPolicy } from "nats"
+import { AckPolicy, DeliverPolicy, JSONCodec, ReplayPolicy } from "nats"
 import { randomUUID } from "crypto"
 import { Message } from "kafkajs";
 import * as AS from "../index";
@@ -35,7 +35,8 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 		servers: "localhost:4222",
 	})
 
-	const jsm = await nc.jetstream().jetstreamManager()
+	const js = nc.jetstream()
+	const jsm = await js.jetstreamManager()
 	await jsm.streams.add({
 		name: "alyxstream-test-stream",
 		subjects: ["alyxstream.test.>"]
@@ -65,6 +66,13 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 	const ksink = await AS.KafkaSink(kc, {
 		allowAutoTopicCreation: true,
 	});
+
+
+	const bucket = await js.views.kv("alyxstream-test-bucket", { history: 2 })
+	let natskvstorage = AS.MakeStorage(AS.StorageKind.NatsKV, {
+		kv: bucket,
+		codec: JSONCodec()	
+	}, "s1")
 
 	const t = AS.Task<string>()
 		.tokenize()
@@ -220,6 +228,26 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 			x => x.payload
 		)
 		.print("etcd - write")
+		.close()
+
+	await AS.Task()
+		.fromNatsKV(natskvstorage, "default")
+		.fn(x => x.decoded)
+		.print("natskv - watch")
+		.close()
+
+	await AS.Task()
+		.fromInterval(10, undefined, 3)
+		.withDefaultKey()
+		.withStorage(natskvstorage)
+		.toStorage(
+			x => x.metadata.key, 
+			x => x.payload
+		)
+		.print("natskv - write")
+		.fn(_ => [])
+		.fromStorage(_ => ["default"])
+		.print("natskv - fromstorage")
 		.close()
 
 	const cassandraInit = AS.MakeStorage(AS.StorageKind.Cassandra, {
