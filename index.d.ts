@@ -19,7 +19,7 @@ export declare type TaskMessage<T> = {
 }
 
 export declare type TaskMessageMetadata = {
-    key: string | number
+    key?: string | number
     windowKey?: string | number | null,
     startTime?: any,
     endTime?: any,
@@ -485,7 +485,7 @@ type ExchangeEmitTask = T<
     void, false, null, false
 >
 
-export declare interface KExchange<OnMessage, EmitMessage> {
+export declare interface KExchange<OnMessage = any, EmitMessage = any> {
     setKeyParser: (fn: (x: OnMessage) => string | number) => void;
     setValidationFunction: (fn: (x: OnMessage) => boolean | any) => void;
     on: <R>(fn: (x: OnMessage) => R) => Promise<T<void, R, OnMessage, true, null, false>>;
@@ -507,10 +507,19 @@ export declare function KafkaClient(config: Kafka.KafkaConfig): Kafka.Kafka
 export declare function KafkaAdmin(client: Kafka.Kafka): Promise<Kafka.Admin>
 
 /** Initialize a Kafka source (consumer). */
-export declare function KafkaSource(client: Kafka.Kafka, config: Kafka.ConsumerConfig & { topics: [{ topic: string, [x: string]: any }] }): Promise<KSource>
+export declare function KafkaSource(client: Kafka.Kafka, config: {
+    groupId: string,
+    topics: Array<{ 
+        topic: string, 
+        fromBeginning?: boolean
+        autoCommit?: boolean
+        autoHeartbeat?: number
+        parseWith?: (x: string) => any // this should be removed for type safety
+    }>
+}): Promise<KSource>
 
 /** Initialize a Kafka sink (producer). */
-export declare function KafkaSink(client: Kafka.Kafka, config: Kafka.ProducerConfig): Promise<KSink>
+export declare function KafkaSink(client: Kafka.Kafka, config?: Kafka.ProducerConfig): Promise<KSink>
 
 export declare function KafkaCommit(source: KSource, params: KCommitParams): Promise<KCommitParams>
 
@@ -527,9 +536,13 @@ export declare function Exchange<
     client: Kafka.Kafka, 
     topic: string, 
     groupId: string, 
-    sourceOptions?: Kafka.ConsumerConfig, 
+    sourceOptions?: {
+        fromBeginning?: boolean
+        autoCommit?: boolean
+        autoHeartbeat?: number
+    }, 
     sinkOptions?: Kafka.ProducerConfig
-): KExchange<OnMessage, EmitMessage>
+): Promise<KExchange<OnMessage, EmitMessage>>
 
 export declare interface PlsSource {
     stream: (cb: any) => Promise<void> /*TBD*/
