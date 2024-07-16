@@ -3,7 +3,7 @@
 import Message from '../message/message.js'
 
 export const sumMap = {
-  sumMap () {
+  sumMap() {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -18,7 +18,7 @@ export const sumMap = {
 }
 
 export const objectGroupBy = {
-  objectGroupBy (cb) {
+  objectGroupBy(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -36,7 +36,7 @@ export const objectGroupBy = {
 }
 
 export const aggregate = {
-  aggregate (storage, name, keyFunction) {
+  aggregate(storage, name, keyFunction) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -53,6 +53,18 @@ export const aggregate = {
       await storage.set(name, currentMap)
 
       await task._nextAtIndex(index)(Message(currentMap, s.metadata, s.globalState))
+    })
+    return task
+  }
+}
+
+export const hydrate = {
+  hydrate(field, cb) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async (element) => {
+      element.payload[field] = await cb(element.payload)
+      await task._nextAtIndex(index)(element)
     })
     return task
   }

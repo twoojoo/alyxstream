@@ -416,6 +416,24 @@ export declare interface T<I, C, L, Ls extends boolean, Sk extends StorageKind, 
         : T<I, R, L, Ls, Sk, Ms>
     : never
 
+    // this is and advanced version that allows for deppest hydration
+    // but it's not type safe when you chain 2 deep hydrations
+    // hydrate: IsObject<C> extends true 
+    // ? <K extends keyof C | NestedKeys<C>, R>(keys: K, cb: (x: C) => R) => R extends Promise<infer U> 
+    //     ? K extends NestedKeys<C>
+    //         ? T<I, WithNestedProp<C, K, U>, L, Ls, Sk, Ms>
+    //         : T<I, WithProp<C, K, U>, L, Ls, Sk, Ms> 
+    //     : K extends NestedKeys<C>
+    //         ? T<I, WithNestedProp<C, K, R>, L, Ls, Sk, Ms> 
+    //         : T<I, WithProp<C, K, R>, L, Ls, Sk, Ms> 
+    // : never
+
+    hydrate: IsObject<C> extends true 
+    ? <K extends keyof C | (string & {}), R>(keys: K, cb: (x: C) => R) => R extends Promise<infer U> 
+        ? T<I, WithProp<C, K, U>, L, Ls, Sk, Ms> 
+        : T<I, WithProp<C, K, R>, L, Ls, Sk, Ms> 
+    : never
+
     // prevents type errors for task extensions
     [x: string]: any
 }
@@ -656,6 +674,27 @@ type NestedElem<T> = T extends readonly (infer U)[]
     ? V 
     : U 
     : never;
+
+/** Return a dynamic array to navigate object keys */
+// type NestedKeys<T> = {
+//     [K in keyof T]: IsObject<T[K]> extends true
+//     ? [K, ...NestedKeys<T[K]>] | [K]
+//     : [K]
+// }[keyof T];
+
+/** Replace the value type of a property at the root of an object */
+type WithProp<T, K extends keyof T, V> = Omit<T, K> & {
+    [P in K]: V
+}
+
+/** Removes the first element of an array */
+// type RemoveFirst<T extends any[]> = T extends [any, ...infer Rest] ? Rest : never;
+
+type IsObject<T> = T extends object ? (keyof T extends never ? false : true) : false;
+
+// type WithNestedProp<T, Path extends NestedKeys<T>, V> = IsObject<T[Path[0]]> extends true
+//     ? WithProp<T, Path[0], WithNestedProp<T[Path[0]], Tail<RemoveFirst<Path>>, V>>
+//     : WithProp<T, Path[0], V>
 
 /** List of storage systems that are suitable for windowing. */
 type WindowStorageKind = 

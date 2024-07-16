@@ -122,7 +122,24 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 			if (x !== null) {
 				throw Error("should be null")
 			}
+
+			return {
+				foo: "bar",
+				baz: {
+					qux: 1,
+					quux: "quuz"
+				},
+				corge: [1, 2, 3, 4, 5]
+			}
 		})
+		.hydrate("foo", _ => 1) 
+		.tap(x => Math.abs(x.foo))
+		.hydrate("corge", async _ => 1)
+		.tap(x => Math.abs(x.corge))
+		.hydrate("baax", _ => 2)
+		.tap(x => Math.abs(x.baax))
+		.fn(x => console.log(x))
+
 
 	await t.inject("I like types!")
 
@@ -241,7 +258,7 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 		.withDefaultKey()
 		.withStorage(natskvstorage)
 		.toStorage(
-			x => x.metadata.key, 
+			x => x.metadata.key!, 
 			x => x.payload
 		)
 		.print("natskv - write")

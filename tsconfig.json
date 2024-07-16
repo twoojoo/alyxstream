@@ -8,7 +8,9 @@
         "traceResolution": false,
         "skipLibCheck": true,
         "types": ["node", "jest"],
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "strict": true,
+        "noImplicitAny": true
     },
     "compileOnSave": false,
     "exclude": ["node_modules", "dist"],
