@@ -2,10 +2,10 @@
 
 import { Task } from '../index.js'
 
-test('select', async () => {
+test('control', async () => {
   await Task()
     .fromArray([1, 2, 3, 4, 5])
-    .select(async (x, next) => {
+    .control(async (x, next) => {
       if (x % 2 === 0) {
         await next(x)
       }
@@ -14,10 +14,10 @@ test('select', async () => {
     .close()
 })
 
-test('selectRaw', async () => {
+test('controlRaw', async () => {
   await Task()
     .fromArray([1, 2, 3, 4, 5])
-    .selectRaw(async (x, next) => {
+    .controlRaw(async (x, next) => {
       if (x.payload % 2 === 0) {
         await next(x)
       }

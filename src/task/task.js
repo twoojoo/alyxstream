@@ -89,8 +89,8 @@ export default function (id) {
     ObjectOperators.aggregate,
     ObjectOperators.objectGroupBy,
 
-    CustomOperators.select,
-    CustomOperators.selectRaw,
+    CustomOperators.control,
+    CustomOperators.controlRaw,
     CustomOperators.fn,
     CustomOperators.fnRaw,
     CustomOperators.customFunction,

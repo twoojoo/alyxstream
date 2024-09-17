@@ -2,8 +2,8 @@
 
 import Message from '../message/message.js'
 
-export const select = {
-  select(cb) {
+export const control = {
+  control(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -18,8 +18,8 @@ export const select = {
   }
 }
 
-export const selectRaw = {
-  selectRaw(cb) {
+export const controlRaw = {
+  controlRaw(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {

@@ -73,13 +73,36 @@ export declare interface T<I, C, G, L, Ls extends boolean, Sk extends StorageKin
 
     readline: () => T<I, string, G, L, Ls, Sk, Ms>
 
-    /** Execute a function on the message payload. Can be an async function. */
-    select: <R>(callback: (x: C, next: (m: R) => Promise<void>) => Promise<void>) => void extends Promise<infer U>
+    /** Executes a controlled function on the message payload:
+     * 
+     * - next tasks are executed whenever the `await next(x)` function is called. 
+     * - the argument passed to then `next` function is the payload of the next operator.
+     * - requires a generic type for the `next` argument (or it will be `unknown`)
+     * - must be `awaited`
+     * 
+     * Examples:
+     * ```ts 
+     * // filter odd numbers
+     * .control<number>(async (x, next) => {
+     *      if (x % 2 === 0) {
+     *         await next(x)
+     *      }
+     * })
+     * 
+     * // fires the message every second for 10 times to the next operator
+     * .control<number>(async (x, next) => {
+     *      for (let i = 0; i < 10; i++) {
+     *        await next(x)
+     *        await new Promise(resolve => setTimeout(resolve, 1000))
+     *      }
+     * })
+     * ``` */
+    control: <R>(callback: (x: C, next: (m: R) => Promise<void>) => Promise<void>) => void extends Promise<infer U>
         ? T<I, U, G, L, Ls, Sk, Ms>
         : T<I, R, G, L, Ls, Sk, Ms>
 
-    /** Execute a function on the raw task message. Can be an async fucntion. */
-    selectRaw: <R>(callback: (x: TaskMessage<C, G>, next: (m: TaskMessage<R>) => Promise<void>) => void) => R extends Promise<infer U>
+    /** Execute a controlled function on the raw task message. Next tasks are executed whenever the `await next(msg)` function is called. */
+    controlRaw: <R>(callback: (x: TaskMessage<C, G>, next: (m: TaskMessage<R>) => Promise<void>) => void) => R extends Promise<infer U>
         ? T<I, U, G, L, Ls, Sk, Ms>
         : T<I, R, G, L, Ls, Sk, Ms>
 

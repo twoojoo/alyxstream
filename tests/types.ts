@@ -116,10 +116,10 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 			}
 			return x
 		})
-		.select<number>(async (x, next) => {
+		.control<number>(async (x, next) => {
 			await next(1)
 		})
-		.selectRaw<number>(async (x, next) => {
+		.controlRaw<number>(async (x, next) => {
 			await next(x.payload)
 		})
 		.fn(x => x)
