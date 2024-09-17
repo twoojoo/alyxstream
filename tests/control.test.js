@@ -25,3 +25,21 @@ test('controlRaw', async () => {
     .fn(x => expect(x % 2).toBe(0))
     .close()
 })
+
+test('controlPromises', async () => {
+  await Task()
+    .fromObject(1)
+    .control(async (x, next) => {
+      const promises = []
+
+      for (let i = 0; i < 5; i++) {
+        promises.push(next(x + i))
+      }
+
+      await Promise.all(promises)
+    })
+    .fn(async x => {
+        console.log(x)
+    })  
+    .close()
+})

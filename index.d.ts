@@ -75,7 +75,7 @@ export declare interface T<I, C, G, L, Ls extends boolean, Sk extends StorageKin
 
     /** Executes a controlled function on the message payload:
      * 
-     * - next tasks are executed whenever the `await next(x)` function is called. 
+     * - next operators are executed whenever the `await next(x)` function is called. 
      * - the argument passed to then `next` function is the payload of the next operator.
      * - requires a generic type for the `next` argument (or it will be `unknown`)
      * - must be `awaited`
@@ -95,6 +95,19 @@ export declare interface T<I, C, G, L, Ls extends boolean, Sk extends StorageKin
      *        await next(x)
      *        await new Promise(resolve => setTimeout(resolve, 1000))
      *      }
+     * })
+     *
+     * // fires the message every second for 10 times and wait for all results
+     * .control<number>(async (x, next) => {
+     *      const promises = []
+     *  
+     *      for (let i = 0; i < 10; i++) {
+     *        console.log("fired", i)
+     *        promises.push(next(x))
+     *      }
+     * 
+     *      await Promise.all(promises)
+     *      console.log("done")
      * })
      * ``` */
     control: <R>(callback: (x: C, next: (m: R) => Promise<void>) => Promise<void>) => void extends Promise<infer U>
