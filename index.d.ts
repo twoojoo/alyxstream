@@ -74,6 +74,16 @@ export declare interface T<I, C, G, L, Ls extends boolean, Sk extends StorageKin
     readline: () => T<I, string, G, L, Ls, Sk, Ms>
 
     /** Execute a function on the message payload. Can be an async function. */
+    select: <R>(callback: (x: C, next: (m: R) => Promise<void>) => Promise<void>) => void extends Promise<infer U>
+        ? T<I, U, G, L, Ls, Sk, Ms>
+        : T<I, R, G, L, Ls, Sk, Ms>
+
+    /** Execute a function on the raw task message. Can be an async fucntion. */
+    selectRaw: <R>(callback: (x: TaskMessage<C, G>, next: (m: TaskMessage<R>) => Promise<void>) => void) => R extends Promise<infer U>
+        ? T<I, U, G, L, Ls, Sk, Ms>
+        : T<I, R, G, L, Ls, Sk, Ms>
+
+    /** Execute a function on the message payload. Can be an async function. */
     fn: <R>(callback: (x: C) => R) => R extends Promise<infer U>
         ? T<I, U, G, L, Ls, Sk, Ms>
         : T<I, R, G, L, Ls, Sk, Ms>

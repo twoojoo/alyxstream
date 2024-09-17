@@ -2,8 +2,39 @@
 
 import Message from '../message/message.js'
 
+export const select = {
+  select(cb) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async (s) => {
+      async function next(res) {
+        const m  = Message(res, s.metadata, s.globalState)
+        await task._nextAtIndex(index)(m)
+      }
+
+      await cb(s.payload, next)
+    })
+    return task
+  }
+}
+
+export const selectRaw = {
+  selectRaw(cb) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async (s) => {
+      async function next(res) {
+        await task._nextAtIndex(index)(res)
+      }
+
+      await cb(s, next)
+    })
+    return task
+  }
+}
+
 export const fn = {
-  fn (cb) {
+  fn(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -15,7 +46,7 @@ export const fn = {
 }
 
 export const fnRaw = {
-  fnRaw (cb) {
+  fnRaw(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -27,7 +58,7 @@ export const fnRaw = {
 }
 
 export const customFunction = {
-  customFunction (cb) {
+  customFunction(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -39,7 +70,7 @@ export const customFunction = {
 }
 
 export const customAsyncFunction = {
-  customAsyncFunction (cb) {
+  customAsyncFunction(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -51,7 +82,7 @@ export const customAsyncFunction = {
 }
 
 export const customFunctionRaw = {
-  customFunctionRaw (cb) {
+  customFunctionRaw(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -63,7 +94,7 @@ export const customFunctionRaw = {
 }
 
 export const customAsyncFunctionRaw = {
-  customAsyncFunctionRaw (cb) {
+  customAsyncFunctionRaw(cb) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (s) => {
@@ -75,7 +106,7 @@ export const customAsyncFunctionRaw = {
 }
 
 export const joinByKeyWithParallelism = {
-  joinByKeyWithParallelism (storage, keyFunction, parallelism) {
+  joinByKeyWithParallelism(storage, keyFunction, parallelism) {
     const task = this
     const index = task._nextIndex()
     task._setNext(async (mex) => {

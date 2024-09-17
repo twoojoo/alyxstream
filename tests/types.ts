@@ -114,7 +114,15 @@ let etcdStorage = AS.MakeStorage(AS.StorageKind.Etcd, {
 			if (x !== null) {
 				throw Error("should be null")
 			}
+			return x
 		})
+		.select<number>(async (x, next) => {
+			await next(1)
+		})
+		.selectRaw<number>(async (x, next) => {
+			await next(x.payload)
+		})
+		.fn(x => x)
 
 	await t.inject("I like types!")
 
