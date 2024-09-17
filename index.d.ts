@@ -358,6 +358,8 @@ export declare interface T<I, C, G, L, Ls extends boolean, Sk extends StorageKin
 
 export declare type TaskExtension<T, U extends any[]> = (first: T, ...rest: U) => void;
 
+export declare type TaskExtensionV2<T, R, U extends any[]> = (first: T, next: (x: R) => void, ...rest: U) => void;
+
 /** Intialize an Alyxstream task. Generic type can be used to provide the initial *inject()* message type. */
 export declare function Task<I = any>(id?: any): T<I, I, any, void, false, null, false> /*TBD*/
 
@@ -366,6 +368,12 @@ export declare function ExtendTask(name: string, extension: TaskExtension<any, a
 
 /** Extends a task by creating a custom method that operates on the raw task message. This function is **type unsafe**. Consider using **fnRaw()** with a custom callback for type safety. */
 export declare function ExtendTaskRaw(name: string, extension: TaskExtension<TaskMessage<any, any>, any>): void
+
+/** Extends a task by creating a custom method. This function is **type unsafe**. Consider using **fn()** with a custom callback for type safety. */
+export declare function ExtendTaskV2(name: string, extension: TaskExtensionV2<any, any, any>): void
+
+/** Extends a task by creating a custom method that operates on the raw task message. This function is **type unsafe**. Consider using **fnRaw()** with a custom callback for type safety. */
+export declare function ExtendTaskRawV2(name: string, extension: TaskExtensionV2<TaskMessage<any, any>, TaskMessage<any, any>, any>): void
 
 export declare enum StorageKind {
     Memory = "Memory",

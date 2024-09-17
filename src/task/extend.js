@@ -3,7 +3,7 @@
 import Message from '../message/message.js'
 export const extensions = {}
 
-export function set (name, extension) {
+export function set(name, extension) {
   const extensionFn = function (...args) {
     const task = this
     const index = task._nextIndex()
@@ -19,7 +19,7 @@ export function set (name, extension) {
   extensions[name] = extensionFn
 }
 
-export function setRaw (name, extension) {
+export function setRaw(name, extension) {
   const extensionFn = function (...args) {
     const task = this
     const index = task._nextIndex()
@@ -30,6 +30,47 @@ export function setRaw (name, extension) {
       const res = await extension(element, ...args)
       const mex = Message(res.payload, res.metadata, res.globalState)
       await task._nextAtIndex(index)(mex)
+    })
+    return task
+  }
+  extensions[name] = extensionFn
+}
+
+export function setV2(name, extension) {
+  const extensionFn = function (...args) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async (element) => {
+      if (element === undefined || element == null) {
+        element = Message()
+      }
+
+      async function next(res) {
+        await task._nextAtIndex(index)(Message(res, element.metadata, element.globalState))
+      }
+
+      await extension(element.payload, next, ...args)
+    })
+    return task
+  }
+  extensions[name] = extensionFn
+}
+
+export function setRawV2(name, extension) {
+  const extensionFn = function (...args) {
+    const task = this
+    const index = task._nextIndex()
+    task._setNext(async (element) => {
+      if (element === undefined || element == null) {
+        element = Message()
+      }
+
+      async function next(res) {
+        const mex = Message(res.payload, res.metadata, res.globalState)
+        await task._nextAtIndex(index)(mex)
+      }
+
+      await extension(element, next, ...args)
     })
     return task
   }

@@ -10,7 +10,12 @@ import task from './src/task/task.js'
 /** Exchange */
 import exchange from './src/exchange/exchange.js'
 
-import { set as ExtendTaskSet, setRaw as ExtendTaskSetRaw } from './src/task/extend.js'
+import { 
+	set as ExtendTaskSet, 
+	setRaw as ExtendTaskSetRaw,
+	setV2 as ExtendTaskSetV2, 
+	setRawV2 as ExtendTaskSetRawV2
+} from './src/task/extend.js'
 
 /** Storage */
 import { Make as storageMake, Kind as storageKind } from './src/storage/interface.js'
@@ -61,6 +66,8 @@ export const Task = task
 export const Exchange = exchange
 export const ExtendTask = ExtendTaskSet
 export const ExtendTaskRaw = ExtendTaskSetRaw
+export const ExtendTaskV2 = ExtendTaskSetV2
+export const ExtendTaskRawV2 = ExtendTaskSetRawV2
 export const MakeStorage = storageMake
 export const StorageKind = storageKind
 export const ExposeStorageState = exposeStorageState
